@@ -22,8 +22,8 @@ export const authOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null
         const user = await prisma.user.findUnique({ where: { email: credentials.email } })
-        // Development-only debug logs to help trace login failures
-        if (process.env.NODE_ENV !== 'production') {
+        // Debug logs (enable in production by setting AUTH_DEBUG=true)
+        if (process.env.NODE_ENV !== 'production' || process.env.AUTH_DEBUG === 'true') {
           try {
             console.log('[auth] authorize: email=', credentials.email)
             console.log('[auth] found user=', !!user)
@@ -36,7 +36,7 @@ export const authOptions = {
         if (!user || !user.password) return null
         if (!user.isVerified) return null
         const isValid = await bcrypt.compare(credentials.password, user.password)
-        if (process.env.NODE_ENV !== 'production') console.log('[auth] password valid=', isValid)
+        if (process.env.NODE_ENV !== 'production' || process.env.AUTH_DEBUG === 'true') console.log('[auth] password valid=', isValid)
         if (!isValid) return null
         return { id: user.id, email: user.email, name: user.name, role: user.role }
       },
